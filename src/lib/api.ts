@@ -1,3 +1,10 @@
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   const response = await fetch(`/api/${path.replace(/^\/+/, "")}`, {
@@ -13,15 +20,15 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   if (!response.ok) {
     const message =
       typeof payload.message === "string" ? payload.message : "Something went wrong. Please try again.";
-    throw new Error(message);
+    throw new ApiError(message, response.status);
   }
   return payload as T;
 }
 
-export function formatDate(value: string) {
+export function formatDate(value: string, locale = "en-IN") {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Date not set";
-  return new Intl.DateTimeFormat("en-IN", {
+  return new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -31,5 +38,5 @@ export function formatDate(value: string) {
 }
 
 export function formatPrice(value: number) {
-  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(value);
 }
